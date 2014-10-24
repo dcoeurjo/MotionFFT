@@ -90,7 +90,7 @@ struct RealPartToChar{
   
   unsigned char operator()(const typename FFT< Image >::Complex &complex) const
   {
-    return static_cast<unsigned char >( (double)complex.real() );
+    return static_cast<unsigned char >( std::abs((double)complex.real() ));
   }
 };
 template <typename Image>
@@ -99,7 +99,7 @@ struct ImgPartToChar{
   ImgPartToChar() {}
   unsigned char operator()(const typename FFT< Image  >::Complex &complex) const
   {
-    return static_cast<unsigned char >( complex.imag() );
+    return static_cast<unsigned char >( std::abs(complex.imag() ));
   }
 };
 template <typename Image>
@@ -250,9 +250,9 @@ int main(int argc, char ** argv)
   FFT3D fft2(img2);
   FFT3D::ComplexImage fftres2(dom2);
   fft2.compute(fftres2);
-  VolWriter<FFT3D::ComplexImage, RealPartToChar<Image> >::exportVol(outputFileName+"--real.vol", fftres2, RealPartToChar<Image>() );
-  VolWriter<FFT3D::ComplexImage, ImgPartToChar<Image> >::exportVol(outputFileName+"--imag.vol", fftres2, ImgPartToChar<Image>() );
-  VolWriter<FFT3D::ComplexImage, MagPartToChar<Image> >::exportVol(outputFileName+"--mag.vol", fftres2, MagPartToChar<Image>() );
+  VolWriter<FFT3D::ComplexImage, RealPartToChar<Image> >::exportVol(outputFileName+"-2-real.vol", fftres2, RealPartToChar<Image>() );
+  VolWriter<FFT3D::ComplexImage, ImgPartToChar<Image> >::exportVol(outputFileName+"-2-imag.vol", fftres2, ImgPartToChar<Image>() );
+  VolWriter<FFT3D::ComplexImage, MagPartToChar<Image> >::exportVol(outputFileName+"-2-mag.vol", fftres2, MagPartToChar<Image>() );
   //End
   
   
