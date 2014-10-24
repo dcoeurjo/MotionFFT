@@ -84,6 +84,34 @@ void addLinearMotion(const Set2D & digitalObject2D,
 }
 
 
+template <typename Image>
+struct RealPartToChar{
+  RealPartToChar() {}
+  
+  unsigned char operator()(const typename FFT< Image >::Complex &complex) const
+  {
+    return static_cast<unsigned char >( (double)complex.real() );
+  }
+};
+template <typename Image>
+
+struct ImgPartToChar{
+  ImgPartToChar() {}
+  unsigned char operator()(const typename FFT< Image  >::Complex &complex) const
+  {
+    return static_cast<unsigned char >( complex.imag() );
+  }
+};
+template <typename Image>
+struct MagPartToChar{
+  MagPartToChar() {}
+  unsigned char operator()(const typename FFT< Image >::Complex &complex) const
+  {
+    return static_cast<unsigned char >( std::abs(complex) );
+  }
+};
+
+
 int main(int argc, char ** argv)
 {
   // parse command line ----------------------------------------------
@@ -92,6 +120,7 @@ int main(int argc, char ** argv)
   ( "help,h", "display this message." )
   ( "resolution,r", po::value<double>(),"Spatial resolution." )
   ( "frame,f", po::value<unsigned int>(),"Temporal resolution (number of frames)." )
+  ( "color,c",  "Add colors in the visualization (slow down the widget, bug in Viewer3D)." )
   ( "output,o", po::value<string>(),"Output vol filename." );
   
   QApplication application(argc,argv);
@@ -124,6 +153,7 @@ int main(int argc, char ** argv)
   const std::string outputFileName = vm["output"].as<std::string>();
 
   
+  
   //2D shape
   typedef Flower2D<Z2i::Space> Shape2D;
   Shape2D flower( 0.0,0.0, 20.0, 5.0, 5 , 0.0);
@@ -149,15 +179,21 @@ int main(int argc, char ** argv)
   //Viewer 3D
   Viewer3D<> viewer;
   viewer.show();
+  
   int previd = -1; //to reduce the number of calls to customcolor (viewer bug)
+  
   for(Map3D::const_iterator it= myFinalSet.begin(), itend=myFinalSet.end(); it!= itend; ++it)
   {
-    int id =(*it).second;
-   /* if (id != previd)
-    {   viewer << CustomColors3D( cmap((*it).second) , cmap((*it).second));
-    previd = id;
-  }*/
-  
+    
+    if (vm.count("color"))
+    {
+      int id =(*it).second;
+      if (id != previd)
+      {
+        viewer << CustomColors3D( cmap((*it).second) , cmap((*it).second));
+        previd = id;
+      }
+    }
     viewer << (*it).first;
   }
   viewer << Viewer3D<>::updateDisplay;
@@ -170,25 +206,55 @@ int main(int argc, char ** argv)
     plow = plow.inf((*it).first);
     pup = pup.sup((*it).first);
   }
+  
+  //Square domain
+  int maxp = pup[0]-plow[0];
+  if ((pup[1]-plow[1])>maxp) maxp=(pup[1]-plow[1]);
+  if ((pup[2]-plow[2])>maxp) maxp=(pup[2]-plow[2]);
+  pup = plow + Point(maxp,maxp,maxp);
   Domain domain(plow,pup);
   trace.info() << "Overall domain = "<<domain<<std::endl;
   
-  ImageContainerBySTLVector<Domain, uint32_t> image(domain);
+  typedef ImageContainerBySTLVector<Domain, unsigned char> Image;
+  Image image(domain);
   for(Map3D::const_iterator it= myFinalSet.begin(), itend=myFinalSet.end(); it!= itend; ++it)
     image.setValue( it->first, it->second);
 
   //just an export of the space/time volume
-  VolWriter<ImageContainerBySTLVector<Domain, uint32_t> >::exportVol(outputFileName, image);
+  VolWriter<Image  >::exportVol(outputFileName+".vol", image);
   
   
   //FFT
-  typedef FFT< ImageContainerBySTLVector<Domain, uint32_t> > FFT3D;
+  ImageContainerBySTLVector<Domain, unsigned char> image2(domain);
+
+  typedef FFT< Image> FFT3D;
   FFT3D fft(image);
  
   trace.beginBlock("Computing FFT");
   FFT3D::ComplexImage fftresult(domain);
   fft.compute(fftresult);
+  
+  //Exports
+  VolWriter<FFT3D::ComplexImage, RealPartToChar<Image> >::exportVol(outputFileName+"-real.vol", fftresult, RealPartToChar<Image>() );
+  VolWriter<FFT3D::ComplexImage, ImgPartToChar<Image> >::exportVol(outputFileName+"-imag.vol", fftresult, ImgPartToChar<Image>() );
+  VolWriter<FFT3D::ComplexImage, MagPartToChar<Image> >::exportVol(outputFileName+"-mag.vol", fftresult, MagPartToChar<Image>() );
   trace.endBlock();
+ 
+  
+  //For debuging FFFT3d
+  Domain dom2(Point(0,0,0),Point(128,128,128));
+  Image img2(dom2);
+  img2.setValue(Point(32,64,32), 128);
+  img2.setValue(Point(32,32,64), 128);
+  img2.setValue(Point(64,32,64), 128);
+  FFT3D fft2(img2);
+  FFT3D::ComplexImage fftres2(dom2);
+  fft2.compute(fftres2);
+  VolWriter<FFT3D::ComplexImage, RealPartToChar<Image> >::exportVol(outputFileName+"--real.vol", fftres2, RealPartToChar<Image>() );
+  VolWriter<FFT3D::ComplexImage, ImgPartToChar<Image> >::exportVol(outputFileName+"--imag.vol", fftres2, ImgPartToChar<Image>() );
+  VolWriter<FFT3D::ComplexImage, MagPartToChar<Image> >::exportVol(outputFileName+"--mag.vol", fftres2, MagPartToChar<Image>() );
+  //End
+  
   
   return application.exec();
   
