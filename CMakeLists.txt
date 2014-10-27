@@ -40,8 +40,10 @@ IF(VERBOSE)
 ENDIF(VERBOSE)
 
 SET(DGTAL_TOOLS_SRC
-  createVol)
-
+  createVol
+  testFFT3D
+  vol2raw
+  )
 
 FOREACH(FILE ${DGTAL_TOOLS_SRC})
   add_executable(${FILE} ${FILE})
@@ -51,3 +53,12 @@ target_link_libraries (${FILE} ${DGTAL_LIBRARIES}  ${DGtalToolsLibDependencies} 
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 ENDFOREACH(FILE)
+
+
+#------ SliceViewer -----
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
+QT4_WRAP_UI(ui_sliceViewer_FORMS_HEADERS sliceViewer.ui)
+QT4_WRAP_CPP(sliceViewer_HEADERS_MOC sliceViewer.h OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
+ADD_EXECUTABLE(sliceViewer sliceViewer.cpp  ${sliceViewer_HEADERS_MOC}
+${ui_sliceViewer_FORMS_HEADERS} )
+target_link_libraries ( sliceViewer  ${DGTAL_LIBRARIES}  ${DGtalToolsLibDependencies})   

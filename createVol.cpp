@@ -242,17 +242,17 @@ int main(int argc, char ** argv)
  
   
   //For debuging FFFT3d
-  Domain dom2(Point(0,0,0),Point(128,128,128));
+  Domain dom2(Point(0,0,0),Point(16,16,16));
   Image img2(dom2);
-  img2.setValue(Point(32,64,32), 128);
-  img2.setValue(Point(32,32,64), 128);
-  img2.setValue(Point(64,32,64), 128);
+  img2.setValue(Point(8,8,8), 128);
   FFT3D fft2(img2);
   FFT3D::ComplexImage fftres2(dom2);
   fft2.compute(fftres2);
   VolWriter<FFT3D::ComplexImage, RealPartToChar<Image> >::exportVol(outputFileName+"-2-real.vol", fftres2, RealPartToChar<Image>() );
   VolWriter<FFT3D::ComplexImage, ImgPartToChar<Image> >::exportVol(outputFileName+"-2-imag.vol", fftres2, ImgPartToChar<Image>() );
   VolWriter<FFT3D::ComplexImage, MagPartToChar<Image> >::exportVol(outputFileName+"-2-mag.vol", fftres2, MagPartToChar<Image>() );
+  
+  
   //End
   
   
