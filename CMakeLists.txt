@@ -41,6 +41,7 @@ ENDIF(VERBOSE)
 
 SET(DGTAL_TOOLS_SRC
   createVol
+  createVol-cli
   testFFT3D
   vol2raw
   )

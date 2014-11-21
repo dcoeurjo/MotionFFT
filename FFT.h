@@ -4,7 +4,7 @@
 #include <fftw3.h>
 
 #include <complex>
-
+#include <DGtal/images/ImageContainerBySTLVector.h>
 #include <DGtal/images/CImage.h>
 
 namespace DGtal{
