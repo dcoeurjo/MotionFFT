@@ -36,7 +36,8 @@ int main()
   typedef ImageContainerBySTLVector<Domain, unsigned char> Image;
 
   //Source
-  Domain domain(Point(0,0,0), Point (128,128,128));
+  Domain domain(Point(0,0,0), Point(512,512,512));
+                                    
   Image image(domain);
   
   typedef ImplicitBall<Z3i::Space> Shape3D;
@@ -63,6 +64,7 @@ int main()
   FFT3D::ComplexImage fftresult(domain);
   fft.compute(fftresult);
   trace.endBlock();
+  
   
   //iFFT
   typedef IFFT<FFT3D::ComplexImage> IFFT3D;
